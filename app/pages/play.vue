@@ -173,7 +173,7 @@
                   >
                 </p>
                 <p class="text-sm text-gray-600">
-                  Streak: {{ user.score?.currentStreak || 0 }} days
+                  Streak: {{ user.score?.currentStreak || 0 }} quizzes
                 </p>
               </div>
             </div>
