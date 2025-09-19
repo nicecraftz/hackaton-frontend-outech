@@ -102,6 +102,100 @@
         </div>
       </div>
     </div>
+
+    <!-- Leaderboard -->
+    <div class="max-w-2xl mx-auto mt-8">
+      <div
+        class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-emerald-200/50 p-6"
+      >
+        <h2 class="text-2xl font-bold text-emerald-900 mb-6 text-center">
+          <Icon
+            name="i-lucide-crown"
+            class="w-6 h-6 inline mr-2 text-amber-600"
+          />
+          Leaderboard
+        </h2>
+
+        <div v-if="loadingUsers" class="text-center py-4">
+          <Icon
+            name="i-lucide-loader-2"
+            class="w-5 h-5 animate-spin mx-auto mb-2 text-emerald-600"
+          />
+          <p class="text-emerald-600">Loading players...</p>
+        </div>
+
+        <div v-else class="space-y-3">
+          <div
+            v-for="(user, index) in orderedUsers"
+            :key="user.id || index"
+            class="flex items-center justify-between p-4 rounded-xl"
+            :class="{
+              'bg-gradient-to-r from-amber-100 to-yellow-100 border border-amber-200':
+                index === 0,
+              'bg-gradient-to-r from-gray-100 to-slate-100 border border-gray-200':
+                index === 1,
+              'bg-gradient-to-r from-orange-100 to-amber-100 border border-orange-200':
+                index === 2,
+              'bg-gray-50 border border-gray-100': index > 2,
+              'ring-2 ring-emerald-400': user.username === userCookie?.username,
+            }"
+          >
+            <div class="flex items-center gap-3">
+              <div class="flex-shrink-0">
+                <div
+                  v-if="index < 3"
+                  class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white"
+                  :class="{
+                    'bg-gradient-to-r from-amber-500 to-yellow-600':
+                      index === 0,
+                    'bg-gradient-to-r from-gray-400 to-gray-600': index === 1,
+                    'bg-gradient-to-r from-orange-500 to-amber-600':
+                      index === 2,
+                  }"
+                >
+                  {{ index + 1 }}
+                </div>
+                <div
+                  v-else
+                  class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center font-bold text-white"
+                >
+                  {{ index + 1 }}
+                </div>
+              </div>
+
+              <div>
+                <p class="font-semibold text-gray-800">
+                  {{ user.username }}
+                  <span
+                    v-if="user.username === userCookie?.username"
+                    class="text-emerald-600 text-sm"
+                    >(You)</span
+                  >
+                </p>
+                <p class="text-sm text-gray-600">
+                  Streak: {{ user.score?.currentStreak || 0 }} days
+                </p>
+              </div>
+            </div>
+
+            <div class="text-right">
+              <p
+                class="font-bold text-lg"
+                :class="{
+                  'text-amber-700': index === 0,
+                  'text-gray-700': index === 1,
+                  'text-orange-700': index === 2,
+                  'text-emerald-700': index > 2,
+                }"
+              >
+                {{ user.score?.points || 0 }}
+              </p>
+              <p class="text-xs text-gray-500">points</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -119,6 +213,8 @@ const pending = ref(false);
 const error = ref<string | null>(null);
 const fail = ref(false);
 const currentPoints = ref(5);
+const loadingUsers = ref(false);
+const allUsers = ref<User[]>([]);
 
 const userCookie = useCookie<User>("user");
 const toast = useToast();
@@ -126,6 +222,7 @@ const toast = useToast();
 // Load initial heritage
 onMounted(() => {
   getRandomHeritage();
+  getAllUsers();
 });
 
 const getHeritageImage = (heritage: Heritage) => {
@@ -134,6 +231,26 @@ const getHeritageImage = (heritage: Heritage) => {
     heritage.images[0].filePath
   );
 };
+
+const getAllUsers = async () => {
+  loadingUsers.value = true;
+  try {
+    const users = await $fetch<User[]>(
+      `http://protocol.alessandrocalista.it:8080/api/v1/users/`
+    );
+    allUsers.value = users || [];
+  } catch (err) {
+    console.error("Failed to load users:", err);
+  } finally {
+    loadingUsers.value = false;
+  }
+};
+
+const orderedUsers = computed(() => {
+  return [...allUsers.value].sort((a, b) => {
+    return (b.score?.points || 0) - (a.score?.points || 0);
+  });
+});
 
 const getPlaceholder = () => {
   if (!currentHeritage.value?.inscribedDate) return "e.g., 1987";
@@ -155,6 +272,8 @@ const updateUserData = async () => {
         },
       }
     );
+    // Refresh leaderboard after updating points
+    await getAllUsers();
   } catch (err) {
     console.error("Failed to update user data:", err);
   }

@@ -21,7 +21,7 @@
     </div>
 
     <div v-else class="pb-20">
-      <!-- Hero Section -->
+      <!-- Hero Section with Attribution -->
       <div class="relative h-96 overflow-hidden">
         <img
           :src="
@@ -50,6 +50,52 @@
               <span class="text-sm"
                 >Inscribed: {{ heritage?.inscribedDate }}</span
               >
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero Image Attribution Button -->
+        <div class="absolute top-4 right-4">
+          <button
+            @click="showHeroAttribution = !showHeroAttribution"
+            class="bg-black/60 text-white text-xs px-3 py-2 rounded-lg backdrop-blur-sm hover:bg-black/80 transition-colors flex items-center gap-1"
+          >
+            <Icon name="i-lucide-info" class="w-3 h-3" />
+            Image Credits
+          </button>
+        </div>
+
+        <!-- Hero Attribution Overlay -->
+        <div
+          v-if="showHeroAttribution && heritage?.images[0]"
+          class="absolute top-16 right-4 bg-black/90 text-white text-xs p-4 rounded-lg max-w-sm backdrop-blur-sm"
+        >
+          <div class="space-y-2">
+            <h4 class="font-medium mb-2">Image Attribution</h4>
+            <div v-if="heritage.images[0].author">
+              <span class="font-medium">Author:</span>
+              {{ heritage.images[0].author }}
+            </div>
+            <div v-if="heritage.images[0].copyright">
+              <span class="font-medium">Copyright:</span>
+              {{ heritage.images[0].copyright }}
+            </div>
+            <div v-if="heritage.images[0].license">
+              <span class="font-medium">License:</span>
+              {{ heritage.images[0].license }}
+            </div>
+            <div v-if="heritage.images[0].source">
+              <span class="font-medium">Source:</span>
+              {{ heritage.images[0].source }}
+            </div>
+            <div v-if="heritage.images[0].link">
+              <a
+                :href="heritage.images[0].link"
+                target="_blank"
+                class="text-blue-300 hover:text-blue-200 underline"
+              >
+                View Original
+              </a>
             </div>
           </div>
         </div>
@@ -107,23 +153,105 @@
             ></div>
           </div>
 
-          <!-- Image Gallery Preview -->
+          <!-- Image Gallery with Full Attribution -->
           <div
-            v-if="heritage?.images && heritage.images.length > 1"
+            v-if="heritage?.images && heritage.images.length > 0"
             class="mt-8"
           >
-            <h3 class="text-xl font-semibold text-emerald-900 mb-4">Gallery</h3>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <img
-                v-for="(image, index) in heritage.images.slice(0, 6)"
+            <h3 class="text-xl font-semibold text-emerald-900 mb-6">
+              Image Gallery
+            </h3>
+            <div class="space-y-6">
+              <div
+                v-for="(image, index) in heritage.images"
                 :key="index"
-                :src="
-                  'http://protocol.alessandrocalista.it:8080/images/' +
-                  image.filePath
-                "
-                :alt="`Heritage image ${index + 1}`"
-                class="w-full h-32 object-cover rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
-              />
+                class="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200"
+              >
+                <!-- Image -->
+                <div class="relative">
+                  <img
+                    :src="
+                      'http://protocol.alessandrocalista.it:8080/images/' +
+                      image.filePath
+                    "
+                    :alt="`Heritage image ${index + 1}`"
+                    class="w-full h-64 md:h-80 object-cover"
+                  />
+                </div>
+
+                <!-- Attribution Section -->
+                <div class="p-4 bg-gray-50 border-t">
+                  <h4
+                    class="font-semibold text-gray-800 mb-3 flex items-center gap-2"
+                  >
+                    <Icon name="i-lucide-camera" class="w-4 h-4" />
+                    Image Attribution
+                  </h4>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div class="space-y-2">
+                      <div v-if="image.author">
+                        <span class="font-medium text-gray-700">Author:</span>
+                        <span class="text-gray-600 ml-1">{{
+                          image.author
+                        }}</span>
+                      </div>
+
+                      <div v-if="image.copyright">
+                        <span class="font-medium text-gray-700"
+                          >Copyright:</span
+                        >
+                        <span class="text-gray-600 ml-1">{{
+                          image.copyright
+                        }}</span>
+                      </div>
+
+                      <div v-if="image.license">
+                        <span class="font-medium text-gray-700">License:</span>
+                        <span class="text-gray-600 ml-1">{{
+                          image.license
+                        }}</span>
+                      </div>
+                    </div>
+
+                    <div class="space-y-2">
+                      <div v-if="image.source">
+                        <span class="font-medium text-gray-700">Source:</span>
+                        <span class="text-gray-600 ml-1">{{
+                          image.source
+                        }}</span>
+                      </div>
+
+                      <div v-if="image.date">
+                        <span class="font-medium text-gray-700">Date:</span>
+                        <span class="text-gray-600 ml-1">{{ image.date }}</span>
+                      </div>
+
+                      <div v-if="image.dateAccessed">
+                        <span class="font-medium text-gray-700">Accessed:</span>
+                        <span class="text-gray-600 ml-1">{{
+                          image.dateAccessed
+                        }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Link to Original -->
+                  <div
+                    v-if="image.link"
+                    class="mt-3 pt-3 border-t border-gray-200"
+                  >
+                    <a
+                      :href="image.link"
+                      target="_blank"
+                      class="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-medium text-sm"
+                    >
+                      <Icon name="i-lucide-external-link" class="w-4 h-4" />
+                      View Original Source
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -150,6 +278,8 @@ import type { Heritage } from "~/types/heritage";
 
 const route = useRoute();
 const heritageId = route.query.id as string;
+
+const showHeroAttribution = ref(false);
 
 const {
   data: heritage,
